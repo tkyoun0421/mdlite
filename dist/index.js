@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // src/index.ts
 import * as fs from "fs/promises";
 import * as path from "path";
@@ -90,38 +92,44 @@ async function readFileAndPrint(dir, fileName) {
   console.log(content);
 }
 async function main() {
-  const { dir: dirArg, fileName: fileArg, changeDir } = parseArgs(args);
-  const lastDir = await getLastDir();
-  const startDir = changeDir ? process.cwd() : dirArg || lastDir || process.cwd();
-  const selectedDir = await chooseDirectory(startDir);
-  await setLastDir(selectedDir);
-  const markdownFiles = await getMarkdownFiles(selectedDir);
-  if (markdownFiles.length === 0) {
-    console.log(`\u{1F4C2} '${selectedDir}' \uD3F4\uB354 \uB0B4\uC758 Markdown \uD30C\uC77C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.`);
-    return;
-  }
-  if (fileArg) {
-    let inputName = fileArg;
-    if (path.extname(inputName) !== ".md") {
-      inputName += ".md";
-    }
-    const matched = markdownFiles.find((f) => f.toLowerCase() === inputName.toLowerCase());
-    if (!matched) {
-      console.log(`\u274C '${inputName}' \uD30C\uC77C\uC774 \uC874\uC7AC\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.`);
+  try {
+    const { dir: dirArg, fileName: fileArg, changeDir } = parseArgs(args);
+    const lastDir = await getLastDir();
+    const startDir = changeDir ? process.cwd() : dirArg || lastDir || process.cwd();
+    const selectedDir = await chooseDirectory(startDir);
+    await setLastDir(selectedDir);
+    const markdownFiles = await getMarkdownFiles(selectedDir);
+    if (markdownFiles.length === 0) {
+      console.log(`\u{1F4C2} '${selectedDir}' \uD3F4\uB354 \uB0B4\uC758 Markdown \uD30C\uC77C\uC774 \uC5C6\uC2B5\uB2C8\uB2E4.`);
       return;
     }
-    await readFileAndPrint(selectedDir, matched);
-    return;
-  }
-  const { selectedFile } = await inquirer.prompt([
-    {
-      type: "list",
-      name: "selectedFile",
-      message: "\uC77D\uC744 Markdown \uD30C\uC77C\uC744 \uC120\uD0DD\uD558\uC138\uC694:",
-      choices: markdownFiles
+    if (fileArg) {
+      let inputName = fileArg;
+      if (path.extname(inputName) !== ".md") {
+        inputName += ".md";
+      }
+      const matched = markdownFiles.find((f) => f.toLowerCase() === inputName.toLowerCase());
+      if (!matched) {
+        console.log(`\u274C '${inputName}' \uD30C\uC77C\uC774 \uC874\uC7AC\uD558\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4.`);
+        return;
+      }
+      await readFileAndPrint(selectedDir, matched);
+      return;
     }
-  ]);
-  await readFileAndPrint(selectedDir, selectedFile);
+    main();
+    const { selectedFile } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedFile",
+        message: "\uC77D\uC744 Markdown \uD30C\uC77C\uC744 \uC120\uD0DD\uD558\uC138\uC694:",
+        choices: markdownFiles
+      }
+    ]);
+    await readFileAndPrint(selectedDir, selectedFile);
+  } catch (error) {
+    console.error("\uC624\uB958 \uBC1C\uC0DD:", error);
+    process.exit(1);
+  }
 }
 main();
 //# sourceMappingURL=index.js.map
