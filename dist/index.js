@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+// src/index.ts
 import * as fs from "fs/promises";
 import * as path from "path";
 import inquirer from "inquirer";
@@ -56,8 +56,8 @@ async function chooseDirectory(baseDir) {
       type: "list",
       name: "selectedFolder",
       message: `\uD3F4\uB354\uB97C \uC120\uD0DD\uD558\uC138\uC694 (\uD604\uC7AC: ${path.basename(baseDir)}):`,
-      choices,
-    },
+      choices
+    }
   ]);
   if (selectedFolder === "[\uD604\uC7AC \uD3F4\uB354 \uC120\uD0DD]") {
     return baseDir;
@@ -118,8 +118,8 @@ async function main() {
       type: "list",
       name: "selectedFile",
       message: "\uC77D\uC744 Markdown \uD30C\uC77C\uC744 \uC120\uD0DD\uD558\uC138\uC694:",
-      choices: markdownFiles,
-    },
+      choices: markdownFiles
+    }
   ]);
   await readFileAndPrint(selectedDir, selectedFile);
 }

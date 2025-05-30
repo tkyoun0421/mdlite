@@ -112,47 +112,54 @@ async function readFileAndPrint(dir: string, fileName: string) {
 }
 
 async function main() {
-  const { dir: dirArg, fileName: fileArg, changeDir } = parseArgs(args);
-  const lastDir = await getLastDir();
+  try {
+    const { dir: dirArg, fileName: fileArg, changeDir } = parseArgs(args);
+    const lastDir = await getLastDir();
 
-  const startDir = changeDir ? process.cwd() : dirArg || lastDir || process.cwd();
-  const selectedDir = await chooseDirectory(startDir);
+    const startDir = changeDir ? process.cwd() : dirArg || lastDir || process.cwd();
+    const selectedDir = await chooseDirectory(startDir);
 
-  await setLastDir(selectedDir);
+    await setLastDir(selectedDir);
 
-  const markdownFiles = await getMarkdownFiles(selectedDir);
-  if (markdownFiles.length === 0) {
-    console.log(`📂 '${selectedDir}' 폴더 내의 Markdown 파일이 없습니다.`);
-    return;
-  }
-
-  if (fileArg) {
-    let inputName = fileArg;
-    if (path.extname(inputName) !== ".md") {
-      inputName += ".md";
-    }
-
-    const matched = markdownFiles.find((f) => f.toLowerCase() === inputName.toLowerCase());
-
-    if (!matched) {
-      console.log(`❌ '${inputName}' 파일이 존재하지 않습니다.`);
+    const markdownFiles = await getMarkdownFiles(selectedDir);
+    if (markdownFiles.length === 0) {
+      console.log(`📂 '${selectedDir}' 폴더 내의 Markdown 파일이 없습니다.`);
       return;
     }
 
-    await readFileAndPrint(selectedDir, matched);
-    return;
+    if (fileArg) {
+      let inputName = fileArg;
+      if (path.extname(inputName) !== ".md") {
+        inputName += ".md";
+      }
+
+      const matched = markdownFiles.find((f) => f.toLowerCase() === inputName.toLowerCase());
+
+      if (!matched) {
+        console.log(`❌ '${inputName}' 파일이 존재하지 않습니다.`);
+        return;
+      }
+
+      await readFileAndPrint(selectedDir, matched);
+      return;
+    }
+
+    main();
+
+    const { selectedFile } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "selectedFile",
+        message: "읽을 Markdown 파일을 선택하세요:",
+        choices: markdownFiles,
+      },
+    ]);
+
+    await readFileAndPrint(selectedDir, selectedFile);
+  } catch (error) {
+    console.error("오류 발생:", error);
+    process.exit(1);
   }
-
-  const { selectedFile } = await inquirer.prompt([
-    {
-      type: "list",
-      name: "selectedFile",
-      message: "읽을 Markdown 파일을 선택하세요:",
-      choices: markdownFiles,
-    },
-  ]);
-
-  await readFileAndPrint(selectedDir, selectedFile);
 }
 
 main();
